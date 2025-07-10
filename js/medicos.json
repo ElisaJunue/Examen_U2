@@ -1,0 +1,17 @@
+[
+    {
+        "nombre": "Dr. Simi",
+        "especialidad": "Precios baratos",
+        "horario": "Lunes a Sabados, 9am - 9pm"
+    },
+    {
+        "nombre": "Dra. Ana Torres",
+        "especialidad": "Pediatria",
+        "horario": "Martes y Jueves, 3pm - 6pm"
+    },
+    {
+        "nombre": "Dr. Miguel Lara",
+        "especialidad": "Dermatología",
+        "horario": "Miércoles a Viernes, 10am - 1pm"
+    }
+]
