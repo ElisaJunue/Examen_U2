@@ -31,8 +31,8 @@
     <h2 class="mb-3">Médicos disponibles</h2>
     <button id="toggle-btn" class="btn btn-outline-primary mb-3">Mostrar/Ocultar lista</button>
     
-    <div id="nedicos-container" style="display: none;">
-        <table class="table table-bordered">
+    <div id="medicos-container" style="display: none;">
+        <table id="tabla-medicos" class="table table-bordered">
             <thead class="table-light">
                 <tr>
                     <th>Nombre</th>
@@ -40,7 +40,7 @@
                     <th>Horario</th>
                 </tr>
             </thead>
-            <tbody id="tabla-medicos"></tbody>
+            <tbody></tbody>
         </table>
     </div>
 </div>
@@ -58,21 +58,24 @@
         $('#toggle-btn').click(function(){
             $('#medicos-container').toggle();
         });
-        $getJSON("js/medicos-json", function(data){
-            const tabla = $("#tabla-medicos");
+
+        $.getJSON("http://localhost:8080/doctors", function(data){
+            const tablaBody = $("#tabla-medicos tbody");
+            tablaBody.empty(); // Limpia antes de volver a cargar
+
             data.forEach(medico => {
-                const fila=`
+                const fila = `
                     <tr>
                         <td>${medico.nombre}</td>
                         <td>${medico.especialidad}</td>
                         <td>${medico.horario}</td>
                     </tr>`;
-                tabla.append(fila);
+                tablaBody.append(fila);
+            });
+        }).fail(function(){
+            alert("No se pudieron cargar los médicos desde el servidor.");
         });
-    }).fail(function(){
-        alert("No se pudieron cargar los médicos desde el archivo local.");
     });
-});
 </script>
 </body>
 </html>
