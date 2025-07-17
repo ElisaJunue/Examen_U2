@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.time.LocalDate;
 
+import com.consultas.backend.dto.CitaRequest;
+
 @RestController
 @RequestMapping("/appointments")
 public class CitaController {
@@ -32,34 +34,26 @@ public class CitaController {
     }
 
     @PostMapping
-    public ResponseEntity<?> agendarCita(@RequestBody Map<String, String> datos) {
-        System.out.println("datos recibidos: " + datos);
+    public ResponseEntity<?> agendarCita(@RequestBody CitaRequest request) {
         try {
-            Long idMedico = Long.parseLong(datos.get("idMedico"));
-            Long idPaciente = Long.parseLong(datos.get("idPaciente"));
-            LocalDate fecha = LocalDate.parse(datos.get("fecha"));
-
-            Medico medico = medicoRepo.findById(idMedico)
+            Medico medico = medicoRepo.findById(request.getIdMedico())
                     .orElseThrow(() -> new IllegalArgumentException("Médico no encontrado"));
-            Paciente paciente = pacienteRepo.findById(idPaciente)
+            Paciente paciente = pacienteRepo.findById(request.getIdPaciente())
                     .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado"));
 
             Cita cita = new Cita();
-            cita.setFecha(fecha);
+            cita.setFecha(LocalDate.parse(request.getFecha()));
             cita.setMedico(medico);
             cita.setPaciente(paciente);
 
             citaRepo.save(cita);
-            System.out.println("Cita guardada correctamente");
 
             Map<String, Object> response = new HashMap<>();
             response.put("mensaje", "Cita guardada exitosamente");
-
-            // 🔁 Este return FALTABA
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            e.printStackTrace(); // Ayuda a debuggear en consola
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error al guardar la cita: " + e.getMessage());
         }
