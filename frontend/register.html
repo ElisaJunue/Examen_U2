@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Registro -> Consulta Médica</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #ffecd2, #fcb69f);
+        }
+
+        .card {
+            border-radius: 1rem;
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #56ab2f, #a8e063);
+            border: none;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(45deg, #a8e063, #56ab2f);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">Consulta Médica</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- REGISTER FORM -->
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h4>Crear Cuenta</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="registerForm">
+                            <div class="mb-3">
+                                <label for="nombre" class="form-label">Nombre completo</label>
+                                <input type="text" class="form-control" id="nombre" placeholder="Héctor Nicolás"
+                                    required />
+                            </div>
+                            <div class="mb-3">
+                                <label for="correo" class="form-label">Correo electrónico</label>
+                                <input type="email" class="form-control" id="correo" placeholder="usuario@ejemplo.com"
+                                    required />
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Contraseña</label>
+                                <input type="password" class="form-control" id="password" placeholder="********"
+                                    required />
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">🎉 Registrarse</button>
+                        </form>
+                    </div>
+                    <div class="card-footer text-muted text-center">
+                        ¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="text-center mt-5 mb-3 text-muted">
+        <hr />
+        <p>© 2025 Consulta Médica Online</p>
+    </footer>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const nombre = document.getElementById('nombre').value;
+            const correo = document.getElementById('correo').value;
+            const password = document.getElementById('password').value;
+
+            const payload = {
+                nombre: nombre,
+                correo: correo,
+                password: password
+            };
+
+            fetch('http://localhost:8080/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en el registro');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Usuario registrado:', data);
+                    alert(`¡Registro exitoso, ${data.nombre}!`);
+                    sessionStorage.setItem('log', 'true');
+                    sessionStorage.setItem('idPaciente', data.id); 
+                    sessionStorage.setItem('nombrePaciente', data.nombre); 
+                    window.location.href = "index.html";
+                })
+                .catch(error => {
+                    console.error('Error al registrar:', error);
+                    alert('Hubo un error. Intenta nuevamente.');
+                });
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

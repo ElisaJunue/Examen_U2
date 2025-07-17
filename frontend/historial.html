@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es" ng-app="historialApp">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Historial de Citas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+</head>
+
+<body ng-controller="HistorialController">
+
+    <!--NAVBAR-->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">Consulta Médica</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html"> Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="medicos.html">Médicos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="citas.html">Mis Citas</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="historial.html">Historial</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h4>Historial de Citas</h4>
+        <table class="table table-striped mt-3">
+            <thead>
+                <tr>
+                    <th>Médico</th>
+                    <th>Especialidad</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="cita in citasHistorial">
+                    <td>{{ cita.medico }}</td>
+                    <td>{{ cita.especialidad }}</td>
+                    <td>{{ cita.fecha }}</td>
+                </tr>
+                <tr ng-if="citasHistorial.length === 0">
+                    <td colspan="3" class="text-center">No hay citas pasadas.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!--FOOTER -->
+    <footer class="text-center mt-5 mb-3 text-muted">
+        <hr />
+        <p>© 2025 Consulta Médica Online</p>
+    </footer>
+
+    <!--JS-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        angular.module('historialApp', [])
+            .controller('HistorialController', function ($scope, $http) {
+                $scope.citasHistorial = [];
+
+                const idPaciente = sessionStorage.getItem('idPaciente');
+                if (!idPaciente) {
+                    alert("No hay sesión activa, redirigiendo a login");
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const hoy = new Date().toISOString().slice(0, 10);
+
+                $http.get("http://localhost:8080/appointments/paciente/" + idPaciente)
+                    .then(function (response) {
+                        // Solo citas con fecha menor a hoy
+                        $scope.citasHistorial = response.data.filter(cita => cita.fecha < hoy);
+                    })
+                    .catch(function () {
+                        alert("Error al cargar historial de citas");
+                    });
+            });
+    </script>
+</body>
+
+</html>

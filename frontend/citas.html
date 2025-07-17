@@ -12,7 +12,7 @@
 <body ng-controller="CitasController">
 
     <!--NAVBAR-->
-    <nav class="navbar navbar-expand-lg nabar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand" href="index.html">Consulta Médica</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
@@ -24,6 +24,7 @@
                     <li class="nav-item"><a class="nav-link" href="index.html"> Inicio</a></li>
                     <li class="nav-item"><a class="nav-link" href="medicos.html">Médicos</a></li>
                     <li class="nav-item"><a class="nav-link active" href="citas.html">Mis Citas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="historial.html">Historial</a></li>
                 </ul>
             </div>
         </div>
@@ -33,19 +34,25 @@
     <div class="container mt-4">
         <h4>Agendar nueva cita</h4>
         <form ng-submit="agendarCita()" class="row g-3 mb-4">
+
             <div class="col-md-4">
-                <input type="text" class="form-control" placeholder="Nombre del médico" ng-model="nuevaCita.medico"
-                    required />
+                <label for="doctorSelect" class="form-label">Seleccione un médico:</label>
+                <select id="doctorSelect" class="form-select" ng-model="nuevaCita.idMedico"
+                    ng-options="medico.id as medico.nombre + ' (' + medico.especialidad + ')' for medico in medicos"
+                    required>
+                    <option value="">-- Seleccione un médico --</option>
+                </select>
             </div>
+
             <div class="col-md-4">
-                <input type="text" class="form-control" placeholder="Especialidad" ng-model="nuevaCita.especialidad" />
+                <label for="fechaCita" class="form-label">Fecha de la cita:</label>
+                <input type="date" id="fechaCita" class="form-control" ng-model="nuevaCita.fecha" required />
             </div>
-            <div class="col-md-4">
-                <input type="date" class="form-control" ng-model="nuevaCita.fecha" required />
-            </div>
+
             <div class="col-12">
                 <button class="btn btn-success" type="submit">Agendar</button>
             </div>
+
         </form>
 
         <!-- LISTA DE CITAS -->
@@ -65,8 +72,11 @@
                     <td>{{ cita.especialidad }}</td>
                     <td>{{ cita.fecha }}</td>
                     <td>
-                        <button class="btn btn-danger btn-sm" ng-click="cancelarCita(cita.id, $index)">Cancelar</button>
+                        <button class="btn btn-danger btn-sm" ng-click="cancelarCita(cita.id)">Cancelar</button>
                     </td>
+                </tr>
+                <tr ng-if="citas.length === 0">
+                    <td colspan="4" class="text-center">No tienes citas agendadas.</td>
                 </tr>
             </tbody>
         </table>
@@ -85,57 +95,93 @@
             .controller('CitasController', function ($scope, $http) {
                 $scope.citas = [];
                 $scope.medicos = [];
-                $scope.nuevaCita = { medico: "", especialidad: "", fecha: "" };
+                $scope.nuevaCita = { idMedico: null, fecha: "" };
 
-                // esta de mas, no necesitamos almacenarlos en localStorage
-                //const STORAGE_KEY = "misCitas";
-                //$scope.citas = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+                // Obtener idPaciente del sessionStorage
+                const idPaciente = sessionStorage.getItem('idPaciente');
+                if (!idPaciente) {
+                    alert("No hay sesión activa, redirigiendo a login");
+                    window.location.href = 'login.html';
+                    return;
+                }
 
-                $http.get("http://localhost:8080/appointments")
+                // Cargar lista de doctores
+                $http.get("http://localhost:8080/doctors")
                     .then(function (response) {
-                        $scope.citas = response.data;
+                        $scope.medicos = response.data;
+                    })
+                    .catch(function () {
+                        alert("Error al cargar los doctores");
                     });
 
-                // Agendar cita con POST
-                $scope.agendarCita = function () {
-                    console.log($scope.nuevaCita)
-
-                    const citaFormateada = {
-                        ...$scope.nuevaCita,
-                        fecha: new Date($scope.nuevaCita.fecha).toISOString().slice(0, 10)
-                    };
-
-                    $http.post("http://localhost:8080/appointments", citaFormateada)
+                // Cargar solo citas del paciente actual desde el backend
+                $scope.cargarCitas = function () {
+                    $http.get("http://localhost:8080/appointments/paciente/" + idPaciente)
                         .then(function (response) {
-                            $scope.citas.push(response.data.appointment);
-                            $scope.nuevaCita = { medico: "", especialidad: "", fecha: "" };
+                            const hoy = new Date().toISOString().slice(0, 10);
+                            // Filtrar solo citas con fecha >= hoy
+                            $scope.citas = response.data.filter(cita => cita.fecha >= hoy);
                         })
-                        .catch(function (error) {
-                            alert("Error");
+                        .catch(function () {
+                            alert("Error al cargar las citas");
                         });
                 };
 
-                // $scope.agendarCita - function () {
-                //     if ($scope.nuevaCita.medico && $scope.nuevaCita.fecha) {
-                //         $scope.citas.push({ ...$scope.nuevacita });
-                //         localstorage.setitem(STORAGE_KEY, JSON.stringify($scope.citas));
-                //         $scope.nuevacita = {};
-                //     }
-                // };
 
+                // Cargar citas inicialmente
+                $scope.cargarCitas();
 
-                //TODO cambiar y llamar a la funcion de eliminar
-                $scope.cancelarCita = function (id, index) {
+                // Agendar cita
+                $scope.agendarCita = function () {
+                    if (!$scope.nuevaCita.idMedico || !$scope.nuevaCita.fecha) {
+                        alert("Seleccione doctor y fecha");
+                        return;
+                    }
+
+                    const payload = {
+                        idMedico: String($scope.nuevaCita.idMedico),
+                        idPaciente: String(idPaciente),
+                        fecha: new Date($scope.nuevaCita.fecha).toISOString().slice(0, 10)
+                    };
+
+                    console.log("Payload que se enviará al backend:", payload);
+
+                    $http.post("http://localhost:8080/appointments", payload)
+                        .then(function (response) {
+                            alert("Cita agendada con éxito");
+
+                            // Recargar las citas para reflejar la nueva
+                            $scope.cargarCitas();
+
+                            // Reset form
+                            $scope.nuevaCita = { idMedico: null, fecha: "" };
+                        })
+                        .catch(function (error) {
+                            console.error("Error al agendar la cita:", error);
+                            alert("Error al agendar la cita");
+                        });
+                };
+
+                // Cancelar cita
+                $scope.cancelarCita = function (id) {
+                    if (!id) {
+                        alert("No se puede cancelar una cita sin ID.");
+                        return;
+                    }
+
                     if (confirm("¿Estás seguro de cancelar esta cita?")) {
-                        $http.delete("http://localhost:8080/appointments/" + id)
+                        $http.delete('http://localhost:8080/appointments/' + id)
                             .then(function () {
-                                $scope.citas.splice(index, 1);
+                                alert("Cita cancelada correctamente");
+                                // Recargar la lista después de borrar
+                                $scope.cargarCitas();
                             })
                             .catch(function () {
                                 alert("No se pudo cancelar la cita");
                             });
                     }
                 };
+
             });
     </script>
 </body>

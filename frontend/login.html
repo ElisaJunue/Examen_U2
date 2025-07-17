@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login -> Consulta Médica</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #74ebd5, #9face6);
+        }
+
+        .card {
+            border-radius: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #3b8d99, #6b6b83);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #6b6b83, #3b8d99);
+        }
+    </style>
+</head>
+
+<body>
+    <!--NAVBAR-->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">Consulta Médica</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!--LOGIN FORM-->
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h4>Iniciar Sesión</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="loginForm">
+                            <div class="mb-3">
+                                <label for="correo" class="form-label">Correo electrónico</label>
+                                <input type="email" class="form-control" id="correo" placeholder="usuario@ejemplo.com"
+                                    required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Contraseña</label>
+                                <input type="password" class="form-control" id="password" placeholder="********"
+                                    required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">🚀 Entrar</button>
+                        </form>
+                    </div>
+                    <div class="card-footer text-muted text-center">
+                        ¿No tienes cuenta? <a href="register.html">Regístrate</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--FOOTER-->
+    <footer class="text-center mt-5 mb-3 text-muted">
+        <hr />
+        <p>© 2025 Consulta Médica Online</p>
+    </footer>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function (event) {
+            event.preventDefault(); // Evita que se recargue la página
+
+            const correo = document.getElementById('correo').value;
+            const password = document.getElementById('password').value;
+
+            const payload = {
+                correo: correo,
+                password: password
+            };
+
+            fetch('http://localhost:8080/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la solicitud');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Respuesta del servidor:', data);
+                    alert(`Bienvenido, ${data.nombre}!`);
+                    sessionStorage.setItem('log', 'true');
+                    sessionStorage.setItem('idPaciente', data.id); 
+                    sessionStorage.setItem('nombrePaciente', data.nombre); 
+                    console.log("Redirigiendo a index...");
+                    window.location.href = "index.html";
+                })
+                .catch(error => {
+                    console.error('Error al hacer login:', error);
+                    alert('¡Ocurrió un error! Verifica tus datos o revisa la consola.');
+                });
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
